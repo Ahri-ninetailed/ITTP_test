@@ -9,7 +9,7 @@ namespace ITTP_test.Models
     {
         public UserContext(DbContextOptions<UserContext> options) : base(options)
         {
-
+            Database.EnsureCreated();
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
