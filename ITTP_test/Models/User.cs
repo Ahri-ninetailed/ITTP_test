@@ -55,13 +55,14 @@ namespace ITTP_test.Models
         }
 
         //0 женщина, 1 мужчина, 2 неизвестно
+        enum Genders { female, male, unknown}
         private int gender;
         public int Genger
         {
             get => gender;
             set
             {
-                if (value == 0 || value == 1 || value == 2)
+                if (value == (int)Genders.female || value == (int)Genders.male || value == (int)Genders.unknown)
                     gender = value;
                 else
                     throw new Exception("Некорректный пол");
