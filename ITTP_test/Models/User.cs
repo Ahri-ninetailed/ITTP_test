@@ -10,7 +10,7 @@ namespace ITTP_test.Models
     public class User
     {
         [Key]
-        public Guid Guid { get; set; }
+        public Guid Guid { get; set; } = Guid.NewGuid();
 
         //(запрещены все символы кроме латинских букв и цифр)
         private string login;
