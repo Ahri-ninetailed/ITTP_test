@@ -11,6 +11,26 @@ namespace ITTP_test.Models
         {
 
         }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<User>().HasData(
+                new User()
+                {
+                    Guid = Guid.NewGuid(),
+                    Login = "Admin",
+                    Password = "Admin",
+                    Name = "Admin",
+                    Genger = 2,
+                    Birthday = null,
+                    Admin = true,
+                    CreatedOn = DateTime.Now,
+                    CreatedBy = "Admin",
+                    ModifiedOn = DateTime.Now,
+                    ModifiedBy = "Admin",
+
+                });
+        }
         public DbSet<User> Users { get; set; }
     }
 }

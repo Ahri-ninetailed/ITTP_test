@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.ComponentModel.DataAnnotations;
+
 namespace ITTP_test.Models
 {
     public class User
     {
+        [Key]
         public Guid Guid { get; set; }
 
         //(запрещены все символы кроме латинских букв и цифр)
