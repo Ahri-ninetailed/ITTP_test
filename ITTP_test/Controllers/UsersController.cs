@@ -74,14 +74,14 @@ namespace ITTP_test.Controllers
 
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("Create")]
         public async Task<ActionResult<User>> PostUser(User user, string login, string password)
         {
             //проверим правильность логина или пароля
             if (!IsPasswordTrue(login, password))
                 throw new Exception("Неверный логин или пароль");
             //права админа может давать только админ
-            if (user.Admin == true && IsAdmin(login, password) == false)
+            if (IsAdmin(login, password) == false)
                 throw new Exception("Недостаточно прав");
 
             user.ModifiedBy = login;
