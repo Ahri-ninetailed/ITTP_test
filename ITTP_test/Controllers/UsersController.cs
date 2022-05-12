@@ -92,17 +92,31 @@ namespace ITTP_test.Controllers
             return CreatedAtAction("GetUser", new { id = user.Guid }, user);
         }
 
-        // DELETE: api/Users/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(Guid id)
+        // DELETE: api/Users/Delete
+        [HttpDelete("Delete/{findlogin}/{softorhard}")]
+        public async Task<IActionResult> DeleteUser(string findlogin, string softorhard, string login, string password)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            //проверим правильность логина или пароля
+            if (!IsPasswordTrue(login, password))
+                throw new Exception("Неверный логин или пароль");
+            //удалять запись может только админ
+            if (IsAdmin(login, password) == false)
+                throw new Exception("Недостаточно прав");
+            //есть два типа удаления: мягкое и нет
+            if (!(softorhard == "hard" || softorhard == "soft"))
+                throw new Exception("Режим удаления может быть \"soft\" или \"hard\"");
 
-            _context.Users.Remove(user);
+            var user = _context.Users.FirstOrDefault(u => u.Login == findlogin);
+            if (user is null)
+                throw new Exception("Такой логин не существует");
+
+            if (softorhard == "hard")
+                _context.Users.Remove(user);
+            else
+            {
+                user.RevokedBy = login;
+                user.RevokedOn = DateTime.Now;
+            }
             await _context.SaveChangesAsync();
 
             return NoContent();
