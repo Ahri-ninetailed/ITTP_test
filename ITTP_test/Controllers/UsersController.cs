@@ -72,7 +72,7 @@ namespace ITTP_test.Controllers
             return NoContent();
         }
 
-        // POST: api/Users
+        // POST: api/Users/Create
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("Create")]
         public async Task<ActionResult<User>> PostUser(User user, string login, string password)
@@ -80,7 +80,7 @@ namespace ITTP_test.Controllers
             //проверим правильность логина или пароля
             if (!IsPasswordTrue(login, password))
                 throw new Exception("Неверный логин или пароль");
-            //права админа может давать только админ
+            //добавлять новые записи может только админ
             if (IsAdmin(login, password) == false)
                 throw new Exception("Недостаточно прав");
 
