@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations;
-
 namespace ITTP_test.Models
 {
     public class User
@@ -14,6 +13,7 @@ namespace ITTP_test.Models
 
         //(запрещены все символы кроме латинских букв и цифр)
         private string login;
+        [Required]
         public string Login
         {
             get => login;
@@ -28,6 +28,8 @@ namespace ITTP_test.Models
 
         //(запрещены все символы кроме латинских букв и цифр)
         private string password;
+        [Required]
+
         public string Password
         {
             get => password;
@@ -42,6 +44,8 @@ namespace ITTP_test.Models
 
         //(запрещены все символы кроме латинских и русских букв)
         private string name;
+        
+        [Required]
         public string Name 
         {
             get => name;
@@ -57,6 +61,7 @@ namespace ITTP_test.Models
         //0 женщина, 1 мужчина, 2 неизвестно
         enum Genders { female, male, unknown}
         private int gender;
+        [Required]
         public int Genger
         {
             get => gender;
@@ -68,7 +73,6 @@ namespace ITTP_test.Models
                     throw new Exception("Некорректный пол");
             }
         }
-
         public DateTime? Birthday { get; set; }
 
         public bool Admin { get; set; }
@@ -81,7 +85,7 @@ namespace ITTP_test.Models
 
         public string ModifiedBy { get; set; }
 
-        public DateTime RevokedOn { get; set; }
+        public DateTime? RevokedOn { get; set; }
 
         public string RevokedBy { get; set; }
 
