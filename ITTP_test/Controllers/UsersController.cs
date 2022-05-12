@@ -75,8 +75,17 @@ namespace ITTP_test.Controllers
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<User>> PostUser(User user, string login, string password)
         {
+            //проверим правильность логина или пароля
+            if (!IsPasswordTrue(login, password))
+                throw new Exception("Неверный логин или пароль");
+            //права админа может давать только админ
+            if (user.Admin == true && IsAdmin(login, password) == false)
+                throw new Exception("Недостаточно прав");
+
+            user.ModifiedBy = login;
+            user.CreatedBy = login;
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -102,6 +111,26 @@ namespace ITTP_test.Controllers
         private bool UserExists(Guid id)
         {
             return _context.Users.Any(e => e.Guid == id);
+        }
+        //Метод проверяет подходит ли пароль к логину
+        private bool IsPasswordTrue(string login, string password)
+        {
+            User user = _context.Users.FirstOrDefault(u => u.Login == login);
+            if (user is null)
+                return false;
+            if (user.Password != password)
+                return false;
+            return true;
+        }
+        //Метод преверяет есть ли у аккаунта права
+        private bool IsAdmin(string login, string password)
+        {
+            User user = _context.Users.FirstOrDefault(u => u.Login == login);
+            if (user is null)
+                return false;
+            if (user.Admin)
+                return true;
+            return false;
         }
     }
 }
