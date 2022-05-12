@@ -37,8 +37,6 @@ namespace ITTP_test.Models
             modelBuilder.Entity<User>().Property(u => u.Admin).HasDefaultValue(false);
             //если пользователь не указал гендер, то он неизвестен
             modelBuilder.Entity<User>().Property(u => u.Genger).HasDefaultValue(2);
-            modelBuilder.Entity<User>().Property(u => u.CreatedOn).HasDefaultValue(DateTime.Now);
-            modelBuilder.Entity<User>().Property(u => u.ModifiedOn).HasDefaultValue(DateTime.Now);
         }
         public DbSet<User> Users { get; set; }
     }
