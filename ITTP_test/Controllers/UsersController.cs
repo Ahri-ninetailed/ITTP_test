@@ -126,8 +126,11 @@ namespace ITTP_test.Controllers
                 _context.Users.Remove(user);
             else
             {
+                var nowTime = DateTime.Now;
                 user.RevokedBy = login;
-                user.RevokedOn = DateTime.Now;
+                user.RevokedOn = nowTime;
+                user.ModifiedBy = login;
+                user.ModifiedOn = nowTime;
             }
             await _context.SaveChangesAsync();
 
