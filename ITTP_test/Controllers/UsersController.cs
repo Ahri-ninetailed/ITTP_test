@@ -41,6 +41,27 @@ namespace ITTP_test.Controllers
             return user;
         }
 
+        // PUT: api/Users/Update-2
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("Update-2/{findlogin}")]
+        public async Task<IActionResult> Update2(string findlogin, string login, string password)
+        {
+            //проверим логин/пароль и права для возобновления записи
+            CheckPasswordAndRight(login, password);
+            User updateUser = await _context.Users.FirstOrDefaultAsync(u => u.Login == findlogin);
+            if (updateUser is null)
+                throw new NullReferenceException("Не найдена запись с таким логином");
+            //очистим поля
+            updateUser.RevokedBy = null;
+            updateUser.RevokedOn = null;
+
+            updateUser.ModifiedOn = DateTime.Now;
+            updateUser.ModifiedBy = login;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
