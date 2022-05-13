@@ -77,13 +77,8 @@ namespace ITTP_test.Controllers
         [HttpPost("Create")]
         public async Task<ActionResult<User>> PostUser(User user, string login, string password)
         {
-            //проверим правильность логина или пароля
-            if (!IsPasswordTrue(login, password))
-                throw new Exception("Неверный логин или пароль");
-            //добавлять новые записи может только админ
-            if (IsAdmin(login, password) == false)
-                throw new Exception("Недостаточно прав");
-
+            //добавлять записи может только админ
+            CheckPasswordAndRight(login, password);
             user.ModifiedBy = login;
             user.CreatedBy = login;
             _context.Users.Add(user);
@@ -96,12 +91,8 @@ namespace ITTP_test.Controllers
         [HttpDelete("Delete/{findlogin}/{softorhard}")]
         public async Task<IActionResult> DeleteUser(string findlogin, string softorhard, string login, string password)
         {
-            //проверим правильность логина или пароля
-            if (!IsPasswordTrue(login, password))
-                throw new Exception("Неверный логин или пароль");
             //удалять запись может только админ
-            if (IsAdmin(login, password) == false)
-                throw new Exception("Недостаточно прав");
+            CheckPasswordAndRight(login, password);
             //есть два типа удаления: мягкое и нет
             if (!(softorhard == "hard" || softorhard == "soft"))
                 throw new Exception("Режим удаления может быть \"soft\" или \"hard\"");
@@ -120,6 +111,15 @@ namespace ITTP_test.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+        //метод проверяет правильность логина и пароля, и достаточно ли прав для выполнения определенной операции
+        private void CheckPasswordAndRight(string login, string password)
+        {
+            if (!IsPasswordTrue(login, password))
+                throw new Exception("Неверный логин или пароль");
+            
+            if (IsAdmin(login, password) == false)
+                throw new Exception("Недостаточно прав");
         }
 
         private bool UserExists(Guid id)
