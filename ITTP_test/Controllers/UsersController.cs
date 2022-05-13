@@ -27,18 +27,23 @@ namespace ITTP_test.Controllers
             return await _context.Users.ToListAsync();
         }
 
-        // GET: api/Users/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(Guid id)
+        // GET: api/Users/Read
+        [HttpGet("Read/{findlogin?}")]
+        public async Task<ActionResult<IEnumerable<User>>> Read(string? findlogin ,string login, string password)
         {
-            var user = await _context.Users.FindAsync(id);
+            if (!IsPasswordTrue(login, password))
+                throw new Exception("Неверный логин или пароль");
 
-            if (user == null)
-            {
-                return NotFound();
-            }
+            if (IsAdmin(login, password) == false)
+                throw new Exception("Недостаточно прав");
 
-            return user;
+            var allActiveUsers = await _context.Users.Where(u => u.RevokedOn == null).OrderBy(u => u.CreatedOn).ToListAsync();
+            //в этот список будут помещаться определенные записи
+            List<User> usersAnswer = new List<User>();
+
+
+            usersAnswer = allActiveUsers;
+            return usersAnswer;
         }
 
         // PUT: api/Users/Update-2
@@ -105,7 +110,7 @@ namespace ITTP_test.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.Guid }, user);
+            return CreatedAtAction("Read", new { id = user.Guid }, user);
         }
 
         // DELETE: api/Users/Delete
