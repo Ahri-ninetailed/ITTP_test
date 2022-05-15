@@ -84,7 +84,7 @@ namespace ITTP_test.Controllers
         {
             //получим логин пароль из хедера
             GetLoginPassword(out string login, out string password);
-            
+
             //найти пользователя по логину может 
             CheckPasswordAndAdminRights(login, password);
 
@@ -164,10 +164,16 @@ namespace ITTP_test.Controllers
             return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
         }
 
-        // DELETE: api/Users/Delete
+        //Удаление пользователя по логину полное или мягкое (При мягком удалении должна происходить простановка RevokedOn и RevokedBy) (Доступно Админам)
+        // DELETE: api/Users/Delete/{findlogin}/{softorhard}
         [HttpDelete("Delete/{findlogin}/{softorhard}")]
-        public async Task<IActionResult> DeleteUser(string findlogin, string softorhard, string login, string password)
+        public async Task<IActionResult> DeleteUser(string findlogin, string softorhard)
         {
+            softorhard = softorhard.ToLower();
+
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
+
             //удалять запись может только админ
             CheckPasswordAndAdminRights(login, password);
             //есть два типа удаления: мягкое и нет
