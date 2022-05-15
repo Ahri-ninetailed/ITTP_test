@@ -155,6 +155,40 @@ namespace ITTP_test.Controllers
             return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
         }
 
+        //Изменение пароля (Пароль может менять либо Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn))
+        // PUT: api/Users/Update-1/UpdatePassword/{findlogin}
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("Update-1/UpdatePassword/{findlogin}")]
+        public async Task<IActionResult> UpdatePassword(string findlogin, string newPassword)
+        {
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
+
+            //проверим логин и пароль
+            if (!IsPasswordTrue(login, password))
+                throw new Exception("Неверный логин или пароль");
+
+            bool isAdmin = IsAdmin(login, password);
+
+            //если юзер не админ, то он не сможет изменить чужую запись
+            if (isAdmin == false && login != findlogin)
+                throw new Exception("Недостаточно прав");
+
+            //получим объект юзера, которого будем менять
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == findlogin);
+
+            //пользователь не может изменять свою запись, если он удален
+            if (user.RevokedOn is not null && isAdmin == false)
+                throw new Exception("Ваша запись была удалена");
+
+            user.ModifiedOn = DateTime.Now;
+            user.Password = newPassword;
+
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
+        }
+
         //Создание пользователя по логину, паролю, имени, полу и дате рождения + указание будет ли пользователь админом(Доступно Админам)
         // POST: api/Users/Create
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
