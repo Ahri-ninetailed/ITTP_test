@@ -122,8 +122,8 @@ namespace ITTP_test.Controllers
         //Изменение имени, пола или даты рождения пользователя (Может менять Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn))
         // PUT: api/Users/Update-1/UpdateNameGenderBirthday
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("Update-1/UpdateNameGenderBirthday/{findlogin}")]
-        public async Task<IActionResult> UpdateNameGenderBirthday(NameGenderBirthday nameGenderBirthday, string findlogin)
+        [HttpPut("Update-1/UpdateNameGenderBirthday")]
+        public async Task<IActionResult> UpdateNameGenderBirthday(NameGenderBirthday nameGenderBirthday)
         {
             //получим логин пароль из хедера
             GetLoginPassword(out string login, out string password);
@@ -135,11 +135,11 @@ namespace ITTP_test.Controllers
             bool isAdmin = IsAdmin(login, password);
 
             //если юзер не админ, то он не сможет изменить чужую запись
-            if (isAdmin == false && login != findlogin)
+            if (isAdmin == false && login != nameGenderBirthday.FindLogin)
                 throw new Exception("Недостаточно прав");
 
             //получим объект юзера, которого будем менять
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == findlogin);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == nameGenderBirthday.FindLogin);
 
             //пользователь не может изменять свою запись, если он удален
             if (user.RevokedOn is not null && isAdmin == false)
@@ -156,10 +156,10 @@ namespace ITTP_test.Controllers
         }
 
         //Изменение пароля (Пароль может менять либо Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn))
-        // PUT: api/Users/Update-1/UpdatePassword/{findlogin}
+        // PUT: api/Users/Update-1/UpdatePassword
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("Update-1/UpdatePassword/{findlogin}")]
-        public async Task<IActionResult> UpdatePassword(string findlogin, NewPassword newPassword)
+        [HttpPut("Update-1/UpdatePassword")]
+        public async Task<IActionResult> UpdatePassword(NewPassword newPassword)
         {
             //получим логин пароль из хедера
             GetLoginPassword(out string login, out string password);
@@ -171,11 +171,11 @@ namespace ITTP_test.Controllers
             bool isAdmin = IsAdmin(login, password);
 
             //если юзер не админ, то он не сможет изменить чужую запись
-            if (isAdmin == false && login != findlogin)
+            if (isAdmin == false && login != newPassword.FindLogin)
                 throw new Exception("Недостаточно прав");
 
             //получим объект юзера, которого будем менять
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == findlogin);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == newPassword.FindLogin);
 
             //пользователь не может изменять свою запись, если он удален
             if (user.RevokedOn is not null && isAdmin == false)
@@ -190,10 +190,10 @@ namespace ITTP_test.Controllers
         }
 
         //Изменение логина (Логин может менять либо Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn), логин должен оставаться уникальным)
-        // PUT: api/Users/Update-1/UpdateLogin/{findlogin}
+        // PUT: api/Users/Update-1/UpdateLogin
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("Update-1/UpdateLogin/{findlogin}")]
-        public async Task<IActionResult> UpdateLogin(string findlogin, NewLogin newLogin)
+        [HttpPut("Update-1/UpdateLogin")]
+        public async Task<IActionResult> UpdateLogin(NewLoginClass newLoginClass)
         {
             //получим логин пароль из хедера
             GetLoginPassword(out string login, out string password);
@@ -205,23 +205,23 @@ namespace ITTP_test.Controllers
             bool isAdmin = IsAdmin(login, password);
 
             //если юзер не админ, то он не сможет изменить чужую запись
-            if (isAdmin == false && login != findlogin)
+            if (isAdmin == false && login != newLoginClass.FindLogin)
                 throw new Exception("Недостаточно прав");
 
             //получим объект юзера, которого будем менять
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == findlogin);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == newLoginClass.FindLogin);
 
             //пользователь не может изменять свою запись, если он удален
             if (user.RevokedOn is not null && isAdmin == false)
                 throw new Exception("Ваша запись была удалена");
 
             //проверка на уникальность логина
-            var checkUser = _context.Users.FirstOrDefault(u => u.Login == newLogin.Login);
+            var checkUser = _context.Users.FirstOrDefault(u => u.Login == newLoginClass.NewLogin);
             if (checkUser != null)
                 throw new Exception("Такой логин уже занят");
             
             user.ModifiedOn = DateTime.Now;
-            user.Login = newLogin.Login;
+            user.Login = newLoginClass.NewLogin;
 
             await _context.SaveChangesAsync();
 
@@ -321,7 +321,23 @@ namespace ITTP_test.Controllers
             password = HttpContext.Request.Headers["Password"];
         }
     }
-    public class NameGenderBirthday
+    public class FindLoginClass
+    {
+        //(запрещены все символы кроме латинских букв и цифр)
+        private string findLogin;
+        public string FindLogin
+        {
+            get => findLogin;
+            set
+            {
+                if (User.IsLettersAndNumbers(value))
+                    findLogin = value;
+                else
+                    throw new Exception("В логине можно использовать только латинские буквы и цифры");
+            }
+        }
+    }
+    public class NameGenderBirthday : FindLoginClass
     {
         //(запрещены все символы кроме латинских и русских букв)
         private string name;
@@ -353,23 +369,7 @@ namespace ITTP_test.Controllers
 
         public DateTime? Birthday { get; set; }
     }
-    public class NewLogin
-    {
-        //(запрещены все символы кроме латинских букв и цифр)
-        private string login;
-        public string Login
-        {
-            get => login;
-            set
-            {
-                if (User.IsLettersAndNumbers(value))
-                    login = value;
-                else
-                    throw new Exception("В логине можно использовать только латинские буквы и цифры");
-            }
-        }
-    }
-    public class NewPassword
+    public class NewPassword : FindLoginClass
     {
         //(запрещены все символы кроме латинских букв и цифр)
         private string password;
@@ -382,6 +382,22 @@ namespace ITTP_test.Controllers
                     password = value;
                 else
                     throw new Exception("Пароль может содержать только латинские буквы и цифры");
+            }
+        }
+    }
+    public class NewLoginClass : FindLoginClass
+    {
+        //(запрещены все символы кроме латинских букв и цифр)
+        private string newLogin;
+        public string NewLogin
+        {
+            get => newLogin;
+            set
+            {
+                if (User.IsLettersAndNumbers(value))
+                    newLogin = value;
+                else
+                    throw new Exception("В логине можно использовать только латинские буквы и цифры");
             }
         }
     }
