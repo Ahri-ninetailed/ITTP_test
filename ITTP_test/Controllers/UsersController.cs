@@ -146,19 +146,22 @@ namespace ITTP_test.Controllers
             return NoContent();
         }
 
+        //Создание пользователя по логину, паролю, имени, полу и дате рождения + указание будет ли пользователь админом(Доступно Админам)
         // POST: api/Users/Create
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("Create")]
-        public async Task<ActionResult<User>> PostUser(User user, string login, string password)
+        public async Task<ActionResult<User>> PostUser(User user)
         {
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
+
             //добавлять записи может только админ
             CheckPasswordAndAdminRights(login, password);
             user.ModifiedBy = login;
             user.CreatedBy = login;
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction("Read", new { id = user.Guid }, user);
+            return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
         }
 
         // DELETE: api/Users/Delete
