@@ -20,6 +20,7 @@ namespace ITTP_test.Controllers
             _context = context;
         }
 
+        
         //Запрос пользователя по логину и паролю (Доступно только самому пользователю, если он активен(отсутствует RevokedOn))
         // GET: api/Users/Read/ReadByMe
         [HttpGet("Read/ReadByMe")]
@@ -49,6 +50,7 @@ namespace ITTP_test.Controllers
             throw new Exception("Недостаточно прав");
         }
 
+        
         //Запрос всех пользователей старше определённого возраста (Доступно Админам)
         // GET: api/Users/Read/ReadByAge/{age}
         [HttpGet("Read/ReadByAge/{age}")]
@@ -63,6 +65,7 @@ namespace ITTP_test.Controllers
             return await _context.Users.Where(u => u.Birthday.HasValue).Where(u => DateTime.Now.Year - u.Birthday.Value.Year > age).ToListAsync();
         }
 
+        
         //Запрос списка всех активных (отсутствует RevokedOn) пользователей, список отсортирован по CreatedOn(Доступно Админам)
         // GET: api/Users/Read/ReadByAllUsers
         [HttpGet("Read/ReadByAllUsers")]
@@ -77,6 +80,7 @@ namespace ITTP_test.Controllers
             return await _context.Users.Where(u => u.RevokedOn == null).OrderBy(u => u.CreatedOn).ToListAsync();
         }
 
+        
         //Запрос пользователя по логину, в списке долны быть имя, пол и дата рождения статус активный или нет(Доступно Админам)
         // GET: api/Users/Read/ReadByLogin/{findlogin}
         [HttpGet("Read/ReadByLogin/{findlogin}")]
@@ -94,9 +98,9 @@ namespace ITTP_test.Controllers
             return Ok(new { Name = findUser.Name, Gender = findUser.Genger, Birtday = findUser.Birthday, RevokedOn = findUser.RevokedOn });
         }
 
+        
         //Восстановление пользователя - Очистка полей (RevokedOn, RevokedBy) (Доступно Админам)
         // PUT: api/Users/Update-2
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("Update-2/{findlogin}")]
         public async Task<IActionResult> RestoreUser(string findlogin)
         {
@@ -119,9 +123,9 @@ namespace ITTP_test.Controllers
             return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, updateUser);
         }
 
+        
         //Изменение имени, пола или даты рождения пользователя (Может менять Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn))
         // PUT: api/Users/Update-1/UpdateNameGenderBirthday
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("Update-1/UpdateNameGenderBirthday")]
         public async Task<IActionResult> UpdateNameGenderBirthday(NameGenderBirthday nameGenderBirthday)
         {
@@ -141,9 +145,9 @@ namespace ITTP_test.Controllers
             return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
         }
 
+        
         //Изменение пароля (Пароль может менять либо Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn))
         // PUT: api/Users/Update-1/UpdatePassword
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("Update-1/UpdatePassword")]
         public async Task<IActionResult> UpdatePassword(NewPassword newPassword)
         {
@@ -161,9 +165,9 @@ namespace ITTP_test.Controllers
             return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
         }
 
+        
         //Изменение логина (Логин может менять либо Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn), логин должен оставаться уникальным)
         // PUT: api/Users/Update-1/UpdateLogin
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("Update-1/UpdateLogin")]
         public async Task<IActionResult> UpdateLogin(NewLoginClass newLoginClass)
         {
@@ -186,9 +190,9 @@ namespace ITTP_test.Controllers
             return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
         }
 
+        
         //Создание пользователя по логину, паролю, имени, полу и дате рождения + указание будет ли пользователь админом(Доступно Админам)
         // POST: api/Users/Create
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("Create")]
         public async Task<ActionResult<User>> PostUser(User user)
         {
@@ -204,6 +208,7 @@ namespace ITTP_test.Controllers
             return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
         }
 
+        
         //Удаление пользователя по логину полное или мягкое (При мягком удалении должна происходить простановка RevokedOn и RevokedBy) (Доступно Админам)
         // DELETE: api/Users/Delete/{findlogin}/{softorhard}
         [HttpDelete("Delete/{findlogin}/{softorhard}")]
@@ -238,6 +243,8 @@ namespace ITTP_test.Controllers
 
             return NoContent();
         }
+        
+        
         //метод проверяет правильность логина и пароля, и достаточно ли прав для выполнения определенной операции
         private void CheckPasswordAndAdminRights(string login, string password)
         {
@@ -248,10 +255,7 @@ namespace ITTP_test.Controllers
                 throw new Exception("Недостаточно прав");
         }
 
-        private bool UserExists(Guid id)
-        {
-            return _context.Users.Any(e => e.Guid == id);
-        }
+
         //Метод проверяет подходит ли пароль к логину
         private bool IsPasswordTrue(string login, string password)
         {
@@ -262,6 +266,8 @@ namespace ITTP_test.Controllers
                 return false;
             return true;
         }
+        
+        
         //Метод преверяет есть ли у аккаунта права
         private bool IsAdmin(string login, string password)
         {
@@ -272,12 +278,16 @@ namespace ITTP_test.Controllers
                 return true;
             return false;
         }
+        
+        
         //метод получает логин и пароль из хедера
         private void GetLoginPassword(out string login, out string password)
         {
             login = HttpContext.Request.Headers["Login"];
             password = HttpContext.Request.Headers["Password"];
         }
+        
+        
         //запись может менять Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn)
         private void CheckLoginPasswordAndConditionsToChangeObject(string login, string password, FindLoginClass findLoginClass, out User user)
         {
