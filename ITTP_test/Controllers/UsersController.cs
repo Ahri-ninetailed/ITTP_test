@@ -94,11 +94,15 @@ namespace ITTP_test.Controllers
             return Ok(new { Name = findUser.Name, Gender = findUser.Genger, Birtday = findUser.Birthday, RevokedOn = findUser.RevokedOn });
         }
 
+        //Восстановление пользователя - Очистка полей (RevokedOn, RevokedBy) (Доступно Админам)
         // PUT: api/Users/Update-2
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("Update-2/{findlogin}")]
-        public async Task<IActionResult> Update2(string findlogin, string login, string password)
+        public async Task<IActionResult> RestoreUser(string findlogin)
         {
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
+
             //проверим логин/пароль и права для возобновления записи
             CheckPasswordAndAdminRights(login, password);
             User updateUser = await _context.Users.FirstOrDefaultAsync(u => u.Login == findlogin);
@@ -112,7 +116,7 @@ namespace ITTP_test.Controllers
             updateUser.ModifiedBy = login;
 
             await _context.SaveChangesAsync();
-            return NoContent();
+            return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, updateUser);
         }
 
         // PUT: api/Users/5
