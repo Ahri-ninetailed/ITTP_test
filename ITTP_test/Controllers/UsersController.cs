@@ -128,22 +128,8 @@ namespace ITTP_test.Controllers
             //получим логин пароль из хедера
             GetLoginPassword(out string login, out string password);
 
-            //проверим логин и пароль
-            if (!IsPasswordTrue(login, password))
-                throw new Exception("Неверный логин или пароль");
-
-            bool isAdmin = IsAdmin(login, password);
-
-            //если юзер не админ, то он не сможет изменить чужую запись
-            if (isAdmin == false && login != nameGenderBirthday.FindLogin)
-                throw new Exception("Недостаточно прав");
-
-            //получим объект юзера, которого будем менять
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == nameGenderBirthday.FindLogin);
-
-            //пользователь не может изменять свою запись, если он удален
-            if (user.RevokedOn is not null && isAdmin == false)
-                throw new Exception("Ваша запись была удалена");
+            //запись может менять Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn)
+            CheckLoginPasswordAndConditionsToChangeObject(login, password, nameGenderBirthday, out User user);
 
             user.ModifiedOn = DateTime.Now;
             user.Name = nameGenderBirthday.Name;
@@ -164,22 +150,8 @@ namespace ITTP_test.Controllers
             //получим логин пароль из хедера
             GetLoginPassword(out string login, out string password);
 
-            //проверим логин и пароль
-            if (!IsPasswordTrue(login, password))
-                throw new Exception("Неверный логин или пароль");
-
-            bool isAdmin = IsAdmin(login, password);
-
-            //если юзер не админ, то он не сможет изменить чужую запись
-            if (isAdmin == false && login != newPassword.FindLogin)
-                throw new Exception("Недостаточно прав");
-
-            //получим объект юзера, которого будем менять
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == newPassword.FindLogin);
-
-            //пользователь не может изменять свою запись, если он удален
-            if (user.RevokedOn is not null && isAdmin == false)
-                throw new Exception("Ваша запись была удалена");
+            //запись может менять Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn)
+            CheckLoginPasswordAndConditionsToChangeObject(login, password, newPassword, out User user);
 
             user.ModifiedOn = DateTime.Now;
             user.Password = newPassword.Password;
@@ -198,22 +170,8 @@ namespace ITTP_test.Controllers
             //получим логин пароль из хедера
             GetLoginPassword(out string login, out string password);
 
-            //проверим логин и пароль
-            if (!IsPasswordTrue(login, password))
-                throw new Exception("Неверный логин или пароль");
-
-            bool isAdmin = IsAdmin(login, password);
-
-            //если юзер не админ, то он не сможет изменить чужую запись
-            if (isAdmin == false && login != newLoginClass.FindLogin)
-                throw new Exception("Недостаточно прав");
-
-            //получим объект юзера, которого будем менять
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == newLoginClass.FindLogin);
-
-            //пользователь не может изменять свою запись, если он удален
-            if (user.RevokedOn is not null && isAdmin == false)
-                throw new Exception("Ваша запись была удалена");
+            //запись может менять Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn)
+            CheckLoginPasswordAndConditionsToChangeObject(login, password, newLoginClass, out User user);
 
             //проверка на уникальность логина
             var checkUser = _context.Users.FirstOrDefault(u => u.Login == newLoginClass.NewLogin);
@@ -319,6 +277,26 @@ namespace ITTP_test.Controllers
         {
             login = HttpContext.Request.Headers["Login"];
             password = HttpContext.Request.Headers["Password"];
+        }
+        //запись может менять Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn)
+        private void CheckLoginPasswordAndConditionsToChangeObject(string login, string password, FindLoginClass findLoginClass, out User user)
+        {
+            //проверим логин и пароль
+            if (!IsPasswordTrue(login, password))
+                throw new Exception("Неверный логин или пароль");
+
+            bool isAdmin = IsAdmin(login, password);
+
+            //если юзер не админ, то он не сможет изменить чужую запись
+            if (isAdmin == false && login != findLoginClass.FindLogin)
+                throw new Exception("Недостаточно прав");
+
+            //получим объект юзера, которого будем менять
+            user = _context.Users.FirstOrDefault(u => u.Login == findLoginClass.FindLogin);
+
+            //пользователь не может изменять свою запись, если он удален
+            if (user.RevokedOn is not null && isAdmin == false)
+                throw new Exception("Ваша запись была удалена");
         }
     }
     public class FindLoginClass
