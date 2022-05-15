@@ -20,30 +20,78 @@ namespace ITTP_test.Controllers
             _context = context;
         }
 
-        // GET: api/Users
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        //Запрос пользователя по логину и паролю (Доступно только самому пользователю, если он активен(отсутствует RevokedOn))
+        // GET: api/Users/Read/ReadByMe
+        [HttpGet("Read/ReadByMe")]
+        public async Task<ActionResult<IEnumerable<User>>> ReadByMe()
         {
-            return await _context.Users.ToListAsync();
-        }
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
 
-        // GET: api/Users/Read
-        [HttpGet("Read/{findlogin?}")]
-        public async Task<ActionResult<IEnumerable<User>>> Read(string? findlogin ,string login, string password)
-        {
             if (!IsPasswordTrue(login, password))
                 throw new Exception("Неверный логин или пароль");
 
+            //запрос пользователя по логину и паролю, доступно только самому пользователю,. если он активен
             if (IsAdmin(login, password) == false)
-                throw new Exception("Недостаточно прав");
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == login);
+                if (user is null)
+                    throw new NullReferenceException("Неверный логин");
+                if (user.RevokedOn is not null)
+                    throw new Exception("Запись удалена");
 
-            var allActiveUsers = await _context.Users.Where(u => u.RevokedOn == null).OrderBy(u => u.CreatedOn).ToListAsync();
-            //в этот список будут помещаться определенные записи
-            List<User> usersAnswer = new List<User>();
+                List<User> answer = new List<User>();
+                answer.Add(user);
 
+                return answer;
+            }
 
-            usersAnswer = allActiveUsers;
-            return usersAnswer;
+            throw new Exception("Недостаточно прав");
+        }
+
+        //Запрос всех пользователей старше определённого возраста (Доступно Админам)
+        // GET: api/Users/Read/ReadByAge/{age}
+        [HttpGet("Read/ReadByAge/{age}")]
+        public async Task<ActionResult<IEnumerable<User>>> ReadByAge(int age)
+        {
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
+
+            //запрос всех пользователей старше определенного возраста, доступно только админам
+            CheckPasswordAndAdminRights(login, password);
+
+            return await _context.Users.Where(u => u.Birthday.HasValue).Where(u => DateTime.Now.Year - u.Birthday.Value.Year > age).ToListAsync();
+        }
+
+        //Запрос списка всех активных (отсутствует RevokedOn) пользователей, список отсортирован по CreatedOn(Доступно Админам)
+        // GET: api/Users/Read/ReadByAllUsers
+        [HttpGet("Read/ReadByAllUsers")]
+        public async Task<ActionResult<IEnumerable<User>>> ReadByAllUsers()
+        {
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
+
+            //поиск по всем активным записям + сортировка по дате добавления, доступно только админам
+            CheckPasswordAndAdminRights(login, password);
+
+            return await _context.Users.Where(u => u.RevokedOn == null).OrderBy(u => u.CreatedOn).ToListAsync();
+        }
+
+        //Запрос пользователя по логину, в списке долны быть имя, пол и дата рождения статус активный или нет(Доступно Админам)
+        // GET: api/Users/Read/ReadByLogin/{findlogin}
+        [HttpGet("Read/ReadByLogin/{findlogin}")]
+        public async Task<IActionResult> ReadByLogin(string findlogin)
+        {
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
+            
+            //найти пользователя по логину может 
+            CheckPasswordAndAdminRights(login, password);
+
+            User findUser = await _context.Users.FirstOrDefaultAsync(u => u.Login == findlogin);
+            if (findUser is null)
+                throw new NullReferenceException("Неверный логин");
+            return Ok(new { Name = findUser.Name, Gender = findUser.Genger, Birtday = findUser.Birthday, RevokedOn = findUser.RevokedOn });
         }
 
         // PUT: api/Users/Update-2
