@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations;
 namespace ITTP_test.Models
 {
+    public enum Genders { female, male, unknown }
     public class User
     {
         [Key]
@@ -59,7 +60,6 @@ namespace ITTP_test.Models
         }
 
         //0 женщина, 1 мужчина, 2 неизвестно
-        enum Genders { female, male, unknown}
         private int gender;
         [Required]
         public int Genger
@@ -90,7 +90,7 @@ namespace ITTP_test.Models
         public string RevokedBy { get; set; }
 
         //метод проверяет строку на лат. буквы и цифры, если в строке есть другие символы метод вернет False
-        private static bool IsLettersAndNumbers(string value)
+        public static bool IsLettersAndNumbers(string value)
         {
             return Regex.IsMatch(value, @"^[0-9a-zA-Z]+$");
         }
