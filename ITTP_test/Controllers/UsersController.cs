@@ -175,5 +175,11 @@ namespace ITTP_test.Controllers
                 return true;
             return false;
         }
+        //метод получает логин и пароль из хедера
+        private void GetLoginPassword(out string login, out string password)
+        {
+            login = HttpContext.Request.Headers["Login"];
+            password = HttpContext.Request.Headers["Password"];
+        }
     }
 }
