@@ -159,7 +159,7 @@ namespace ITTP_test.Controllers
         // PUT: api/Users/Update-1/UpdatePassword/{findlogin}
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("Update-1/UpdatePassword/{findlogin}")]
-        public async Task<IActionResult> UpdatePassword(string findlogin, string newPassword)
+        public async Task<IActionResult> UpdatePassword(string findlogin, NewPassword newPassword)
         {
             //получим логин пароль из хедера
             GetLoginPassword(out string login, out string password);
@@ -182,7 +182,46 @@ namespace ITTP_test.Controllers
                 throw new Exception("Ваша запись была удалена");
 
             user.ModifiedOn = DateTime.Now;
-            user.Password = newPassword;
+            user.Password = newPassword.Password;
+
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
+        }
+
+        //Изменение логина (Логин может менять либо Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn), логин должен оставаться уникальным)
+        // PUT: api/Users/Update-1/UpdateLogin/{findlogin}
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("Update-1/UpdateLogin/{findlogin}")]
+        public async Task<IActionResult> UpdateLogin(string findlogin, NewLogin newLogin)
+        {
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
+
+            //проверим логин и пароль
+            if (!IsPasswordTrue(login, password))
+                throw new Exception("Неверный логин или пароль");
+
+            bool isAdmin = IsAdmin(login, password);
+
+            //если юзер не админ, то он не сможет изменить чужую запись
+            if (isAdmin == false && login != findlogin)
+                throw new Exception("Недостаточно прав");
+
+            //получим объект юзера, которого будем менять
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == findlogin);
+
+            //пользователь не может изменять свою запись, если он удален
+            if (user.RevokedOn is not null && isAdmin == false)
+                throw new Exception("Ваша запись была удалена");
+
+            //проверка на уникальность логина
+            var checkUser = _context.Users.FirstOrDefault(u => u.Login == newLogin.Login);
+            if (checkUser != null)
+                throw new Exception("Такой логин уже занят");
+            
+            user.ModifiedOn = DateTime.Now;
+            user.Login = newLogin.Login;
 
             await _context.SaveChangesAsync();
 
@@ -297,7 +336,7 @@ namespace ITTP_test.Controllers
                     throw new Exception("Имя может содержать только латинские и русские буквы");
             }
         }
-        
+
         //0 женщина, 1 мужчина, 2 неизвестно
         private int gender;
         public int Genger
@@ -313,5 +352,37 @@ namespace ITTP_test.Controllers
         }
 
         public DateTime? Birthday { get; set; }
+    }
+    public class NewLogin
+    {
+        //(запрещены все символы кроме латинских букв и цифр)
+        private string login;
+        public string Login
+        {
+            get => login;
+            set
+            {
+                if (User.IsLettersAndNumbers(value))
+                    login = value;
+                else
+                    throw new Exception("В логине можно использовать только латинские буквы и цифры");
+            }
+        }
+    }
+    public class NewPassword
+    {
+        //(запрещены все символы кроме латинских букв и цифр)
+        private string password;
+        public string Password
+        {
+            get => password;
+            set
+            {
+                if (User.IsLettersAndNumbers(value))
+                    password = value;
+                else
+                    throw new Exception("Пароль может содержать только латинские буквы и цифры");
+            }
+        }
     }
 }

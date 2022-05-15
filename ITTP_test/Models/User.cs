@@ -90,7 +90,7 @@ namespace ITTP_test.Models
         public string RevokedBy { get; set; }
 
         //метод проверяет строку на лат. буквы и цифры, если в строке есть другие символы метод вернет False
-        private static bool IsLettersAndNumbers(string value)
+        public static bool IsLettersAndNumbers(string value)
         {
             return Regex.IsMatch(value, @"^[0-9a-zA-Z]+$");
         }
