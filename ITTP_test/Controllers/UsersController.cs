@@ -149,7 +149,7 @@ namespace ITTP_test.Controllers
         //Изменение пароля (Пароль может менять либо Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn))
         // PUT: api/Users/Update-1/UpdatePassword
         [HttpPut("Update-1/UpdatePassword")]
-        public async Task<IActionResult> UpdatePassword(NewPassword newPassword)
+        public async Task<IActionResult> UpdatePassword(NewPasswordClass newPassword)
         {
             //получим логин пароль из хедера
             GetLoginPassword(out string login, out string password);
@@ -158,7 +158,7 @@ namespace ITTP_test.Controllers
             CheckLoginPasswordAndConditionsToChangeObject(login, password, newPassword, out User user);
 
             user.ModifiedOn = DateTime.Now;
-            user.Password = newPassword.Password;
+            user.Password = newPassword.NewPassword;
 
             await _context.SaveChangesAsync();
 
@@ -357,11 +357,11 @@ namespace ITTP_test.Controllers
 
         public DateTime? Birthday { get; set; }
     }
-    public class NewPassword : FindLoginClass
+    public class NewPasswordClass : FindLoginClass
     {
         //(запрещены все символы кроме латинских букв и цифр)
         private string password;
-        public string Password
+        public string NewPassword
         {
             get => password;
             set
