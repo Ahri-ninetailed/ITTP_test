@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations;
 namespace ITTP_test.Models
 {
+    public enum Genders { female, male, unknown }
     public class User
     {
         [Key]
@@ -59,7 +60,6 @@ namespace ITTP_test.Models
         }
 
         //0 женщина, 1 мужчина, 2 неизвестно
-        enum Genders { female, male, unknown}
         private int gender;
         [Required]
         public int Genger

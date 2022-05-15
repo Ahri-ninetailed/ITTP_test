@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ITTP_test.Models;
-
+using System.Text.RegularExpressions;
 namespace ITTP_test.Controllers
 {
     [Route("api/[controller]")]
@@ -119,35 +119,40 @@ namespace ITTP_test.Controllers
             return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, updateUser);
         }
 
-        // PUT: api/Users/5
+        //Изменение имени, пола или даты рождения пользователя (Может менять Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn))
+        // PUT: api/Users/Update-1/UpdateNameGenderBirthday
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(Guid id, User user)
+        [HttpPut("Update-1/UpdateNameGenderBirthday/{findlogin}")]
+        public async Task<IActionResult> UpdateNameGenderBirthday(NameGenderBirthday nameGenderBirthday, string findlogin)
         {
-            if (id != user.Guid)
-            {
-                return BadRequest();
-            }
+            //получим логин пароль из хедера
+            GetLoginPassword(out string login, out string password);
 
-            _context.Entry(user).State = EntityState.Modified;
+            //проверим логин и пароль
+            if (!IsPasswordTrue(login, password))
+                throw new Exception("Неверный логин или пароль");
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            bool isAdmin = IsAdmin(login, password);
 
-            return NoContent();
+            //если юзер не админ, то он не сможет изменить чужую запись
+            if (isAdmin == false && login != findlogin)
+                throw new Exception("Недостаточно прав");
+
+            //получим объект юзера, которого будем менять
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == findlogin);
+
+            //пользователь не может изменять свою запись, если он удален
+            if (user.RevokedOn is not null && isAdmin == false)
+                throw new Exception("Ваша запись была удалена");
+
+            user.ModifiedOn = DateTime.Now;
+            user.Name = nameGenderBirthday.Name;
+            user.Genger = nameGenderBirthday.Genger;
+            user.Birthday = nameGenderBirthday.Birthday;
+
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("ReadByMe", new { Login = login, Password = password }, user);
         }
 
         //Создание пользователя по логину, паролю, имени, полу и дате рождения + указание будет ли пользователь админом(Доступно Админам)
@@ -242,5 +247,37 @@ namespace ITTP_test.Controllers
             login = HttpContext.Request.Headers["Login"];
             password = HttpContext.Request.Headers["Password"];
         }
+    }
+    public class NameGenderBirthday
+    {
+        //(запрещены все символы кроме латинских и русских букв)
+        private string name;
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if (Regex.IsMatch(value, @"^[a-zA-Zа-яА-Я]+$"))
+                    name = value;
+                else
+                    throw new Exception("Имя может содержать только латинские и русские буквы");
+            }
+        }
+        
+        //0 женщина, 1 мужчина, 2 неизвестно
+        private int gender;
+        public int Genger
+        {
+            get => gender;
+            set
+            {
+                if (value == (int)Genders.female || value == (int)Genders.male || value == (int)Genders.unknown)
+                    gender = value;
+                else
+                    throw new Exception("Некорректный пол");
+            }
+        }
+
+        public DateTime? Birthday { get; set; }
     }
 }
