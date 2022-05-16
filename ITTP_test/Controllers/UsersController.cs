@@ -303,6 +303,9 @@ namespace ITTP_test.Controllers
 
             //получим объект юзера, которого будем менять
             user = _context.Users.FirstOrDefault(u => u.Login == findLoginClass.FindLogin);
+            if (user is null)
+                throw new NullReferenceException("Не найдено пользователя с таким логином");
+
 
             //пользователь не может изменять свою запись, если он удален
             if (user.RevokedOn is not null && isAdmin == false)
