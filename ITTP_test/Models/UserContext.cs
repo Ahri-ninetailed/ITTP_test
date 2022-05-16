@@ -34,6 +34,8 @@ namespace ITTP_test.Models
             modelBuilder.Entity<User>().Property(u => u.Admin).HasDefaultValue(false);
             //если пользователь не указал гендер, то он неизвестен
             modelBuilder.Entity<User>().Property(u => u.Genger).HasDefaultValue(2);
+            //включим чувствительность к регистру у атрибута логин
+            modelBuilder.Entity<User>().Property(a => a.Login).UseCollation("SQL_Latin1_General_CP1_CS_AS");
         }
         public DbSet<User> Users { get; set; }
     }
