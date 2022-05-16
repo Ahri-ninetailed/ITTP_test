@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations;
-
 namespace ITTP_test.Models
 {
+    public enum Genders { female, male, unknown }
     public class User
     {
         [Key]
-        public Guid Guid { get; set; }
+        public Guid Guid { get; set; } = Guid.NewGuid();
 
         //(запрещены все символы кроме латинских букв и цифр)
         private string login;
+        [Required]
         public string Login
         {
             get => login;
@@ -28,6 +26,8 @@ namespace ITTP_test.Models
 
         //(запрещены все символы кроме латинских букв и цифр)
         private string password;
+        [Required]
+
         public string Password
         {
             get => password;
@@ -42,6 +42,8 @@ namespace ITTP_test.Models
 
         //(запрещены все символы кроме латинских и русских букв)
         private string name;
+        
+        [Required]
         public string Name 
         {
             get => name;
@@ -56,36 +58,36 @@ namespace ITTP_test.Models
 
         //0 женщина, 1 мужчина, 2 неизвестно
         private int gender;
+        [Required]
         public int Genger
         {
             get => gender;
             set
             {
-                if (value == 0 || value == 1 || value == 2)
+                if (value == (int)Genders.female || value == (int)Genders.male || value == (int)Genders.unknown)
                     gender = value;
                 else
                     throw new Exception("Некорректный пол");
             }
         }
-
         public DateTime? Birthday { get; set; }
 
         public bool Admin { get; set; }
 
-        public DateTime CreatedOn { get; set; }
+        public DateTime CreatedOn { get; set; } = DateTime.Now;
 
         public string CreatedBy { get; set; }
 
-        public DateTime ModifiedOn { get; set; }
+        public DateTime ModifiedOn { get; set; } = DateTime.Now;
 
         public string ModifiedBy { get; set; }
 
-        public DateTime RevokedOn { get; set; }
+        public DateTime? RevokedOn { get; set; }
 
         public string RevokedBy { get; set; }
 
         //метод проверяет строку на лат. буквы и цифры, если в строке есть другие символы метод вернет False
-        private static bool IsLettersAndNumbers(string value)
+        public static bool IsLettersAndNumbers(string value)
         {
             return Regex.IsMatch(value, @"^[0-9a-zA-Z]+$");
         }

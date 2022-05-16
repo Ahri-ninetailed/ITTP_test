@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using ITTP_test.Models;
+using ITTP_test.Controllers;
 namespace ITTP_test
 {
     public class Startup
@@ -22,10 +23,13 @@ namespace ITTP_test
         {
 
             services.AddControllers();
-            services.AddDbContext<UserContext>(opt => opt.UseInMemoryDatabase("Users"));
+            string connection = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<UserContext>(options => options.UseSqlServer(connection));
+            //services.AddDbContext<UserContext>(opt => opt.UseInMemoryDatabase("Users"));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ITTP_test", Version = "v1" });
+                c.OperationFilter<CustomHeaderSwaggerAttribute>();
             });
         }
 
