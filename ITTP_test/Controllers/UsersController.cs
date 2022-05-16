@@ -309,6 +309,7 @@ namespace ITTP_test.Controllers
                 throw new Exception("Ваша запись была удалена");
         }
     }
+    //классы используются для передачи информации в body
     public class FindLoginClass
     {
         //(запрещены все символы кроме латинских букв и цифр)
