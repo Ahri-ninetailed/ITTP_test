@@ -176,7 +176,12 @@ namespace ITTP_test.Controllers
 
             //запись может менять Администратор, либо лично пользователь, если он активен(отсутствует RevokedOn)
             CheckLoginPasswordAndConditionsToChangeObject(login, password, newLoginClass, out User user);
-   
+
+            //проверка на уникальность логина
+            var checkUser = _context.Users.FirstOrDefault(u => u.Login == newLoginClass.NewLogin);
+            if (checkUser != null)
+                throw new Exception("Такой логин уже занят");
+            
             user.ModifiedOn = DateTime.Now;
             user.Login = newLoginClass.NewLogin;
 
